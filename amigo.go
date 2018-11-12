@@ -85,7 +85,7 @@ func (a *Amigo) CapitalizeProps(c bool) {
 }
 
 //Closing the connection
-func (a *Amigo) ClosingConnection() {
+func (a *Amigo) Close() {
 	a.ami.quitConn = a.quitConnection
 	a.connection.Close()
 }
