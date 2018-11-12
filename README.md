@@ -8,12 +8,12 @@ Usage is pretty simple.
 
 ## Installation:
 
-`go get github.com/ivahaev/amigo`
+`go get github.com/srikanthalluri/amigo`
 
 ## Using
 Import module to your project:
 ```go
-import "github.com/ivahaev/amigo"
+import "github.com/srikanthalluri/amigo"
 ```
 
 Then use:
@@ -23,7 +23,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/ivahaev/amigo"
+	"github.com/srikanthalluri/amigo"
 )
 
 // Creating hanlder functions
