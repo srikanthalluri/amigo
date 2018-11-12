@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ivahaev/amigo/uuid"
+	"github.com/srikanthalluri/amigo/uuid"
 )
 
 const (
@@ -24,7 +24,7 @@ var (
 	actionTimeout = 3 * time.Second
 	dialTimeout   = 10 * time.Second
 	pingInterval  = 5 * time.Second
-	sequence      uint64 
+	sequence      uint64
 )
 
 type amiAdapter struct {
@@ -44,8 +44,8 @@ type amiAdapter struct {
 	pingerChan    chan struct{}
 	mutex         *sync.RWMutex
 	emitEvent     func(string, string)
-        connection    net.Conn
-        quitConn      bool 
+	connection    net.Conn
+	quitConn      bool
 }
 
 func newAMIAdapter(s *Settings, eventEmitter func(string, string)) (*amiAdapter, error) {
@@ -62,13 +62,12 @@ func newAMIAdapter(s *Settings, eventEmitter func(string, string)) (*amiAdapter,
 	a.responseChans = make(map[string]chan map[string]string)
 	a.eventsChan = make(chan map[string]string, 1024)
 	a.pingerChan = make(chan struct{})
-        
-        //fmt.Println("Inside New Adapter func")
+
 	go func() {
 		for {
-                        if a.quitConn {
-                           break
-                         } 
+			if a.quitConn {
+				break
+			}
 			func() {
 				a.id = nextID()
 				var err error
@@ -76,7 +75,7 @@ func newAMIAdapter(s *Settings, eventEmitter func(string, string)) (*amiAdapter,
 				writeErrChan := make(chan error)
 				pingErrChan := make(chan error)
 				chanStop := make(chan struct{})
-				for {  
+				for {
 					a.connection, err = a.openConnection()
 					if err == nil {
 						defer a.connection.Close()
@@ -124,15 +123,15 @@ func newAMIAdapter(s *Settings, eventEmitter func(string, string)) (*amiAdapter,
 				a.mutex.Lock()
 				a.connected = false
 				a.mutex.Unlock()
-                                
-                                if !a.quitConn {
-                                  go a.emitEvent("error", fmt.Sprintf("AMI TCP ERROR: %s", err.Error()))
-                                }
+
+				if !a.quitConn {
+					go a.emitEvent("error", fmt.Sprintf("AMI TCP ERROR: %s", err.Error()))
+				}
 			}()
-                     
+
 		}
 	}()
-        time.Sleep(1 * time.Second)
+	time.Sleep(1 * time.Second)
 	return a, nil
 }
 

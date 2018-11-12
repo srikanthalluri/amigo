@@ -3,12 +3,12 @@ package amigo
 import (
 	"errors"
 	"fmt"
+	"net"
 	"strings"
-        "net"
 	"sync"
 	"time"
 
-	"github.com/ivahaev/amigo/uuid"
+	"github.com/srikanthalluri/amigo/uuid"
 )
 
 var (
@@ -35,8 +35,8 @@ type Amigo struct {
 	connectCalled   bool
 	mutex           *sync.RWMutex
 	handlerMutex    *sync.RWMutex
-        connection      net.Conn
-        quitConnection  bool        
+	connection      net.Conn
+	quitConnection  bool
 }
 
 // Settings represents connection settings for Amigo.
@@ -85,9 +85,9 @@ func (a *Amigo) CapitalizeProps(c bool) {
 }
 
 //Closing the connection
-func (a *Amigo) ClosingConnection(){
-      a.ami.quitConn = a.quitConnection
-      a.connection.Close()
+func (a *Amigo) ClosingConnection() {
+	a.ami.quitConn = a.quitConnection
+	a.connection.Close()
 }
 
 // Action used to execute Actions in Asterisk. Returns immediately response from asterisk. Full response will follow.
@@ -135,7 +135,7 @@ func (a *Amigo) AgiAction(channel, command string) (map[string]string, error) {
 	result := a.ami.exec(action)
 	a.mutex.Unlock()
 	if result["Response"] != "Success" {
-			return result, errors.New("Fail with command")
+		return result, errors.New("Fail with command")
 	}
 	result = <-ac.c
 	delete(result, "CommandID")
@@ -166,8 +166,8 @@ func (a *Amigo) Connect() {
 	var err error
 	for {
 		am, err := newAMIAdapter(a.settings, a.emitEvent)
-                a.connection = am.connection
-                a.quitConnection = true
+		a.connection = am.connection
+		a.quitConnection = true
 		if err != nil {
 			go a.emitEvent("error", fmt.Sprintf("AMI Connect error: %s", err.Error()))
 		} else {
@@ -329,7 +329,7 @@ func (a *Amigo) emitEvent(name, message string) {
 
 	for _, h := range handlers {
 		h(message)
-               
+
 	}
 }
 
