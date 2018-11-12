@@ -24,7 +24,7 @@ var (
 	actionTimeout = 3 * time.Second
 	dialTimeout   = 10 * time.Second
 	pingInterval  = 5 * time.Second
-	sequence      uint64
+	sequence      uint64 
 )
 
 type amiAdapter struct {
@@ -44,6 +44,8 @@ type amiAdapter struct {
 	pingerChan    chan struct{}
 	mutex         *sync.RWMutex
 	emitEvent     func(string, string)
+        connection    net.Conn
+        quitConn      bool 
 }
 
 func newAMIAdapter(s *Settings, eventEmitter func(string, string)) (*amiAdapter, error) {
@@ -60,29 +62,32 @@ func newAMIAdapter(s *Settings, eventEmitter func(string, string)) (*amiAdapter,
 	a.responseChans = make(map[string]chan map[string]string)
 	a.eventsChan = make(chan map[string]string, 1024)
 	a.pingerChan = make(chan struct{})
-
+        
+        //fmt.Println("Inside New Adapter func")
 	go func() {
 		for {
+                        if a.quitConn {
+                           break
+                         } 
 			func() {
 				a.id = nextID()
 				var err error
-				var conn net.Conn
 				readErrChan := make(chan error)
 				writeErrChan := make(chan error)
 				pingErrChan := make(chan error)
 				chanStop := make(chan struct{})
-				for {
-					conn, err = a.openConnection()
+				for {  
+					a.connection, err = a.openConnection()
 					if err == nil {
-						defer conn.Close()
+						defer a.connection.Close()
 						greetings := make([]byte, 100)
-						n, err := conn.Read(greetings)
+						n, err := (a.connection).Read(greetings)
 						if err != nil {
 							go a.emitEvent("error", fmt.Sprintf("Asterisk connection error: %s", err.Error()))
 							return
 						}
 
-						err = a.login(conn)
+						err = a.login(a.connection)
 						if err != nil {
 							go a.emitEvent("error", fmt.Sprintf("Asterisk login error: %s", err.Error()))
 							return
@@ -103,8 +108,8 @@ func newAMIAdapter(s *Settings, eventEmitter func(string, string)) (*amiAdapter,
 				a.mutex.Lock()
 				a.connected = true
 				a.mutex.Unlock()
-				go a.reader(conn, chanStop, readErrChan)
-				go a.writer(conn, chanStop, writeErrChan)
+				go a.reader(a.connection, chanStop, readErrChan)
+				go a.writer(a.connection, chanStop, writeErrChan)
 				if s.Keepalive {
 					go a.pinger(chanStop, pingErrChan)
 				}
@@ -119,12 +124,15 @@ func newAMIAdapter(s *Settings, eventEmitter func(string, string)) (*amiAdapter,
 				a.mutex.Lock()
 				a.connected = false
 				a.mutex.Unlock()
-
-				go a.emitEvent("error", fmt.Sprintf("AMI TCP ERROR: %s", err.Error()))
+                                
+                                if !a.quitConn {
+                                  go a.emitEvent("error", fmt.Sprintf("AMI TCP ERROR: %s", err.Error()))
+                                }
 			}()
+                     
 		}
 	}()
-
+        time.Sleep(1 * time.Second)
 	return a, nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+        "net"
 	"sync"
 	"time"
 
@@ -34,6 +35,8 @@ type Amigo struct {
 	connectCalled   bool
 	mutex           *sync.RWMutex
 	handlerMutex    *sync.RWMutex
+        connection      net.Conn
+        quitConnection  bool        
 }
 
 // Settings represents connection settings for Amigo.
@@ -81,6 +84,12 @@ func (a *Amigo) CapitalizeProps(c bool) {
 	a.capitalizeProps = c
 }
 
+//Closing the connection
+func (a *Amigo) ClosingConnection(){
+      a.ami.quitConn = a.quitConnection
+      a.connection.Close()
+}
+
 // Action used to execute Actions in Asterisk. Returns immediately response from asterisk. Full response will follow.
 // Usage amigo.Action(action map[string]string)
 func (a *Amigo) Action(action map[string]string) (map[string]string, error) {
@@ -126,7 +135,7 @@ func (a *Amigo) AgiAction(channel, command string) (map[string]string, error) {
 	result := a.ami.exec(action)
 	a.mutex.Unlock()
 	if result["Response"] != "Success" {
-		return result, errors.New("Fail with command")
+			return result, errors.New("Fail with command")
 	}
 	result = <-ac.c
 	delete(result, "CommandID")
@@ -157,6 +166,8 @@ func (a *Amigo) Connect() {
 	var err error
 	for {
 		am, err := newAMIAdapter(a.settings, a.emitEvent)
+                a.connection = am.connection
+                a.quitConnection = true
 		if err != nil {
 			go a.emitEvent("error", fmt.Sprintf("AMI Connect error: %s", err.Error()))
 		} else {
@@ -318,6 +329,7 @@ func (a *Amigo) emitEvent(name, message string) {
 
 	for _, h := range handlers {
 		h(message)
+               
 	}
 }
 
