@@ -37,6 +37,7 @@ type Amigo struct {
 	handlerMutex    *sync.RWMutex
 	connection      net.Conn
 	quitConnection  bool
+	closeChannel    bool
 }
 
 // Settings represents connection settings for Amigo.
@@ -89,6 +90,11 @@ func (a *Amigo) Close() {
 	a.ami.quitConn = a.quitConnection
 	a.connection.Close()
 }
+
+func (a *Amigo) ChannelClosed(chn bool) {
+       a.closeChannel = chn
+}
+
 
 // Action used to execute Actions in Asterisk. Returns immediately response from asterisk. Full response will follow.
 // Usage amigo.Action(action map[string]string)
@@ -188,6 +194,10 @@ func (a *Amigo) Connect() {
 		for {
 			var e = <-a.ami.eventsChan
 			a.handlerMutex.RLock()
+                         
+			if a.closeChannel && a.defaultChannel != nil {
+                           break
+                        }
 
 			if a.defaultChannel != nil {
 				a.defaultChannel <- e
