@@ -92,9 +92,8 @@ func (a *Amigo) Close() {
 }
 
 func (a *Amigo) ChannelClosed(chn bool) {
-       a.closeChannel = chn
+	a.closeChannel = chn
 }
-
 
 // Action used to execute Actions in Asterisk. Returns immediately response from asterisk. Full response will follow.
 // Usage amigo.Action(action map[string]string)
@@ -194,10 +193,10 @@ func (a *Amigo) Connect() {
 		for {
 			var e = <-a.ami.eventsChan
 			a.handlerMutex.RLock()
-                         
+
 			if a.closeChannel && a.defaultChannel != nil {
-                           break
-                        }
+				break
+			}
 
 			if a.defaultChannel != nil {
 				a.defaultChannel <- e
