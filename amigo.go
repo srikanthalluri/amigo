@@ -69,7 +69,7 @@ type agiCommand struct {
 // Usage: New(username string, secret string, [host string, [port string]])
 func New(settings *Settings) *Amigo {
 	prepareSettings(settings)
-
+	log.Println("Entered into New func")
 	var ami *amiAdapter
 	return &Amigo{
 		settings:      settings,
@@ -79,7 +79,6 @@ func New(settings *Settings) *Amigo {
 		mutex:         &sync.RWMutex{},
 		handlerMutex:  &sync.RWMutex{},
 	}
-	log.Println("Entered into New func")
 }
 
 // CapitalizeProps used to capitalise all prop's names when true provided.
