@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"log"
 
 	"github.com/srikanthalluri/amigo/uuid"
 )
@@ -193,8 +194,9 @@ func (a *Amigo) Connect() {
 		for {
 			var e = <-a.ami.eventsChan
 			a.handlerMutex.RLock()
-
-			if a.closeChannel && a.defaultChannel != nil {
+                        
+			log.Println("Inside connect go routine. closechannel is:", a.closeChannel)
+			if a.closeChannel {
 				break
 			}
 
