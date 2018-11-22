@@ -3,11 +3,11 @@ package amigo
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"strings"
 	"sync"
 	"time"
-	"log"
 
 	"github.com/srikanthalluri/amigo/uuid"
 )
@@ -79,6 +79,7 @@ func New(settings *Settings) *Amigo {
 		mutex:         &sync.RWMutex{},
 		handlerMutex:  &sync.RWMutex{},
 	}
+	log.Println("Entered into New func")
 }
 
 // CapitalizeProps used to capitalise all prop's names when true provided.
@@ -90,10 +91,12 @@ func (a *Amigo) CapitalizeProps(c bool) {
 func (a *Amigo) Close() {
 	a.ami.quitConn = a.quitConnection
 	a.connection.Close()
+	log.Println("Entered into close connection")
 }
 
 func (a *Amigo) ChannelClosed(chn bool) {
 	a.closeChannel = chn
+	log.Println("Entered into channel closed func")
 }
 
 // Action used to execute Actions in Asterisk. Returns immediately response from asterisk. Full response will follow.
@@ -160,6 +163,7 @@ func (a *Amigo) AgiAction(channel, command string) (map[string]string, error) {
 func (a *Amigo) Connect() {
 	var connectCalled bool
 	a.mutex.RLock()
+	log.Println("Entered into Connect func")
 	connectCalled = a.connectCalled
 	a.mutex.RUnlock()
 	if connectCalled {
@@ -194,13 +198,15 @@ func (a *Amigo) Connect() {
 		for {
 			var e = <-a.ami.eventsChan
 			a.handlerMutex.RLock()
-                        
+
 			log.Println("Inside connect go routine. closechannel is:", a.closeChannel)
 			if a.closeChannel {
+				log.Println("Going to exit the loop")
 				break
 			}
 
 			if a.defaultChannel != nil {
+				log.Println("Entered into defaultchannel check:", a.defaultChannel)
 				a.defaultChannel <- e
 			}
 
@@ -269,6 +275,7 @@ func (a *Amigo) On(event string, handler func(string)) {
 		a.eventHandlers[event] = []eventHandlerFunc{}
 	}
 	a.eventHandlers[event] = append(a.eventHandlers[event], handler)
+	log.Println("Entered into on func")
 }
 
 // RegisterDefaultHandler registers handler function that will called on each event
@@ -300,6 +307,7 @@ func (a *Amigo) SetEventChannel(c chan map[string]string) {
 	a.handlerMutex.Lock()
 	defer a.handlerMutex.Unlock()
 	a.defaultChannel = c
+	log.Println("Entered into setEventChannel func")
 }
 
 // UnregisterDefaultHandler removes default handler function
@@ -345,6 +353,7 @@ func (a *Amigo) emitEvent(name, message string) {
 }
 
 func prepareSettings(settings *Settings) {
+	log.Println("Entered into settings func")
 	if settings.Username == "" {
 		settings.Username = "admin"
 	}
